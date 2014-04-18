@@ -19,7 +19,6 @@ page_template = u"""<title>Web Platform Tests Results</title>
 .TIMEOUT {background-color:orange}
 .CRASH {background-color:black}
 .MISSING {background-color:pink}
-.child {display:none}
 </style>
 <p>Ran %(num_tests)s of %(expected_num_tests)s expected in %(minutes)s minutes %(seconds)s seconds, efficiency %(efficiency).2f</p>
 <p><label>Local server port <input name=local_port id=local_port value=8000></label></p>
@@ -141,9 +140,9 @@ def render_html(data):
     rows = []
     for item in data["tests"].itervalues():
         rows.append(row_template % escape_dict(item))
-        # for child_item in item["tests"]:
-        #     child_item.update({"suffix": item["id"]})
-        #     rows.append(child_template % escape_dict(child_item))
+        for child_item in item["tests"]:
+            child_item.update({"suffix": item["id"]})
+            rows.append(child_template % escape_dict(child_item))
 
     print (page_template % {"minutes":data["time"][0],
                             "seconds":data["time"][1],
