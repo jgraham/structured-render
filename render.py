@@ -4,6 +4,7 @@ import json
 from cgi import escape
 from collections import OrderedDict, defaultdict
 import types
+import argparse
 
 page_template = u"""<title>Web Platform Tests Results</title>
 <meta charset=utf8>
@@ -19,7 +20,6 @@ page_template = u"""<title>Web Platform Tests Results</title>
 .TIMEOUT {background-color:orange}
 .CRASH {background-color:black}
 .MISSING {background-color:pink}
-.child {display:none}
 </style>
 <p>Ran %(num_tests)s of %(expected_num_tests)s expected in %(minutes)s minutes %(seconds)s seconds, efficiency %(efficiency).2f</p>
 <p><label>Local server port <input name=local_port id=local_port value=8000></label></p>
@@ -42,17 +42,23 @@ row_template = u"""<tr class="parent" data-parent-id="%(id)s"><td><td><a class="
 
 child_template = u"""<tr class="child child_%(suffix)s"><td><td>%(name)s<td class="condition %(status)s">%(status)s<td><td><td>%(message)s"""
 
-def load(fn):
-    with open(fn) as f:
-        rv = []
-        for line in f:
-            if not line.strip():
-                continue
-            try:
-                rv.append(json.loads(line.strip()))
-            except:
-                print >> sys.stderr, line
-        return rv
+parser = argparse.ArgumentParser(description='Render the output of a web-platform-tests run')
+parser.add_argument('path', type=argparse.FileType('r'), help='an integer for the accumulator')
+parser.add_argument('--html', action='store_true', help='Format the output as html')
+parser.add_argument('--show-children', action='store_true', help='Show subtests')
+
+args=parser.parse_args()
+
+def load(f):
+    rv = []
+    for line in f:
+        if not line.strip():
+            continue
+        try:
+            rv.append(json.loads(line.strip()))
+        except:
+            print >> sys.stderr, line
+    return rv
 
 def get_data(data):
     rows = OrderedDict()
@@ -120,9 +126,9 @@ def get_data(data):
 
 def main():
     rows = []
-    data = get_data(load(sys.argv[1]))
+    data = get_data(load(args.path))
 
-    if "--html" in sys.argv:
+    if args.html:
         render_html(data)
     else:
         render_text(data)
@@ -141,9 +147,10 @@ def render_html(data):
     rows = []
     for item in data["tests"].itervalues():
         rows.append(row_template % escape_dict(item))
-        # for child_item in item["tests"]:
-        #     child_item.update({"suffix": item["id"]})
-        #     rows.append(child_template % escape_dict(child_item))
+        if args.show_children:
+            for child_item in item["tests"]:
+                child_item.update({"suffix": item["id"]})
+                rows.append(child_template % escape_dict(child_item))
 
     print (page_template % {"minutes":data["time"][0],
                             "seconds":data["time"][1],
