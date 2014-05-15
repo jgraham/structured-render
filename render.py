@@ -97,7 +97,7 @@ def get_data(data):
         elif item["action"] == "test_status":
             current_row = create_row(item, False)
             current_row["tests"].append({"name": item["subtest"],
-                                         "status": item["status"],
+                                         "status": "FAIL" if "expected" in item else "PASS",
                                          "message": item.get("message", "")})
             if item["status"] == "PASS":
                 current_row["num_passes"] += 1
