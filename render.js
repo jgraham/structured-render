@@ -8,7 +8,7 @@ function update_test_link() {
 }
 
 function update_status(e) {
-    var elem = e.originalTarget;
+    var elem = e.originalTarget || e.target;
     if (elem.localName != "input" || elem.type != "checkbox") {
         return;
     }
@@ -30,6 +30,22 @@ function setup_conditions() {
     Array.prototype.forEach.call(counts, function(x) {var condition = x.id.split("_")[1];
                                                       x.textContent = result_table.querySelectorAll("td.parent." + condition).length});
     document.getElementById("conditions").addEventListener("click", update_status, false);
+}
+
+function dump_annotations() {
+    var data = {}
+    var parents = document.querySelectorAll("tr.parent");
+    for (var i = 0; i<parents.length; i++) {
+         var annotation = parents[i].querySelector('.annotation')
+         if(annotation) {
+            var key = parents[i].querySelector('.local_link').textContent;
+            var value = annotation.innerHTML.trim();
+            if(value) {
+                data[key] = value;
+            }
+         }
+    }
+    return data;
 }
 
 window.addEventListener("DOMContentLoaded", function() {

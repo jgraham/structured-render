@@ -31,22 +31,22 @@ page_template = u"""<title>Web Platform Tests Results</title>
 <tr><td><input type="checkbox" name=condition_TIMEOUT id=condition_FAIL checked><td class="condition TIMEOUT">TIMEOUT<td class=count class=count id="count_TIMEOUT">
 <tr><td><input type="checkbox" name=condition_CRASH id=condition_CRASH checked><td class="condition CRASH">CRASH<td class=count id="count_CRASH">
 </table>
-
+<button onclick="prompt('Please copy the JSON below', JSON.stringify(dump_annotations()))">Dump annotations</button>
 <table class=sortable id=results>
-<tr><th><th>Parent test<th>Parent Status<th>Child pass rate<th>Duration (s)<th>Message</tr>
+<tr><th><th>Parent test<th>Parent Status<th>Child pass rate<th>Duration (s)<th>Message<th class=annotations>Annotation</tr>
 %(rows)s
 </table>
 """
 
-row_template = u"""<tr class="parent" data-parent-id="%(id)s"><td><td><a class="local_link" href="http://web-platform.test%(test)s">%(test)s</a> (<a href="http://w3c-test.org/web-platform-tests/master%(test)s">w3c-test.org</a>) <td class="condition %(parent_status)s parent">%(parent_status)s<td class="condition %(child_status)s">%(num_passes)d / %(num_children)d<td>%(duration).2f<td>%(message)s"""
+row_template = u"""<tr class="parent" data-parent-id="%(id)s"><td><td><a class="local_link" href="http://web-platform.test%(test)s">%(test)s</a> (<a href="http://w3c-test.org/web-platform-tests/master%(test)s">w3c-test.org</a>) <td class="condition %(parent_status)s parent">%(parent_status)s<td class="condition %(child_status)s">%(num_passes)d / %(num_children)d<td>%(duration).2f<td>%(message)s<td class="annotation" contenteditable>%(annotation)s"""
 
 child_template = u"""<tr class="child child_%(suffix)s"><td><td>%(name)s<td class="condition %(status)s">%(status)s<td><td><td>%(message)s"""
 
 parser = argparse.ArgumentParser(description='Render the output of a web-platform-tests run')
-parser.add_argument('path', type=argparse.FileType('r'), help='an integer for the accumulator')
+parser.add_argument('path', type=argparse.FileType('r'), help='output of WPT run')
 parser.add_argument('--html', action='store_true', help='Format the output as html')
-parser.add_argument('--show-children', action='store_true', help='Show subtests')
-
+parser.add_argument('--show-children', action='store_true', help='Show subtests in html view')
+parser.add_argument('--annotations', type=argparse.FileType('r'), help='Anotations file')
 args=parser.parse_args()
 
 def load(f):
@@ -127,25 +127,28 @@ def get_data(data):
 def main():
     rows = []
     data = get_data(load(args.path))
-
+    annotations = None
+    if args.annotations:
+        annotations=json.load(args.annotations)
     if args.html:
-        render_html(data)
+        render_html(data, annotations)
     else:
         render_text(data)
 
 def escape_dict(in_data):
     out_data = {}
     for key, value in in_data.iteritems():
-        if type(value) in types.StringTypes:
+        if type(value) in types.StringTypes and key != "annotation":
             out_data[key] = escape(value)
         else:
             out_data[key] = value
     return out_data
 
-def render_html(data):
+def render_html(data, annotations):
     efficiency = sum(item["duration"] for item in data["tests"].itervalues()) / (data["time"][0] * 60 + data["time"][1])
     rows = []
     for item in data["tests"].itervalues():
+        item['annotation'] = annotations.get(item['test'],"") if annotations else ""
         rows.append(row_template % escape_dict(item))
         if args.show_children:
             for child_item in item["tests"]:
