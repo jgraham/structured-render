@@ -38,7 +38,7 @@ page_template = u"""<title>Web Platform Tests Results</title>
 </table>
 """
 
-row_template = u"""<tr class="parent" data-parent-id="%(id)s"><td><td><a class="local_link" href="http://web-platform.test%(test)s">%(test)s</a> (<a href="http://w3c-test.org/web-platform-tests/master%(test)s">w3c-test.org</a>) <td class="condition %(parent_status)s parent">%(parent_status)s<td class="condition %(child_status)s">%(num_passes)d / %(num_children)d<td>%(duration).2f<td>%(message)s"""
+row_template = u"""<tr class="parent" data-parent-id="%(id)s"><td><td><a class="local_link" href="http://web-platform.test%(test)s">%(test)s</a> (<a href="http://w3c-test.org/web-platform-tests/master%(test)s">w3c-test.org</a>, <a href="https://github.com/w3c/web-platform-tests/blob/master%(test)s">github</a>) <td class="condition %(parent_status)s parent">%(parent_status)s<td class="condition %(child_status)s">%(num_passes)d / %(num_children)d<td>%(duration).2f<td>%(message)s"""
 
 child_template = u"""<tr class="child child_%(suffix)s"><td><td>%(name)s<td class="condition %(status)s">%(status)s<td><td><td>%(message)s"""
 
